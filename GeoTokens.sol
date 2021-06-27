@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/ERC721.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol";
 
+
+
 contract GeoTokens is ERC721,Ownable {
     
     uint256 private tokenId;
@@ -60,7 +62,7 @@ contract GeoTokens is ERC721,Ownable {
     function getAllNFT() public view returns(tokeInfo[] memory){
         tokeInfo[] memory metaInfo = new tokeInfo[](tokenId);
         
-        for (uint i = 0; i < tokenId; i++) {
+        for (uint i = 1; i < tokenId; i++) {
         metaInfo[i] = metaData[i];
         }
     return metaInfo;
