@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.0;
 
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/ERC721.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol";
@@ -46,8 +46,8 @@ contract GeoTokens is ERC721,Ownable {
         uint256 length = MetaData.length;
         uint256 j;
         for(j=0;j<length;j++){
-            _safeMint(owner(), tokenId);
             metaData[tokenId] = MetaData[j];
+            emit NFTCreation(uint256 tokenId,MetaData[tokenId]);
             tokenId = tokenId + 1;
         }
         
@@ -62,14 +62,15 @@ contract GeoTokens is ERC721,Ownable {
     
     //Users can pay prescribed amount and buy token of particular token ID
     function Buy(uint256 tokenID) external payable{
-        require (_exists(tokenID),"GeoTokens: Token doesn't exist");
-        require (metaData[tokenID].status != 0,"GoeTokens: Token is already sold");
+        require (tokenID < tokenId,"GeoTokens: Token doesn't exist");
+        require (metaData[tokenID].status == 1,"GoeTokens: Token is already sold");
         require (!layerLocked[metaData[tokenID].layer],"GeoTokens: This layer is locked right now");
         require (msg.value >= metaData[tokenID].price, "GeoTokens: Pay equal to or more than set Price");
         
-        
-        safeTransferFrom(owner(),msg.sender,tokenID);
+        _safeMint(msg.sender, tokenID);
         metaData[tokenID].status = 0; //Token status is sold
+        emit NFTSale(msg.sender,tokenID);
+        
     }
     
     //returns metadata based on token ID
