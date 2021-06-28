@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.0;
+pragma solidity ^0.8.0;
 
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/ERC721.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol";
@@ -32,6 +32,8 @@ contract GeoTokens is ERC721,Ownable {
     
     //Set price of any NFT with token ID
     function SetPrice(uint256 tokenID,uint256 _price) external onlyOwner {
+        require(metaData[tokenID].status == 1,"GeoTokens : Can't change sold NFT's price");
+        require(tokenID < tokenId,"GeoTokens : NFT doesn't exist");
         metaData[tokenID].price = _price;
     }
     
@@ -47,7 +49,7 @@ contract GeoTokens is ERC721,Ownable {
         uint256 j;
         for(j=0;j<length;j++){
             metaData[tokenId] = MetaData[j];
-            emit NFTCreation(tokenId,MetaData[tokenId]);
+            //emit NFTCreation(tokenId,MetaData[tokenId]);
             tokenId = tokenId + 1;
         }
         
@@ -80,10 +82,10 @@ contract GeoTokens is ERC721,Ownable {
     
     //Returns metadata of all available NFTs
     function getAllNFT() public view returns(tokeInfo[] memory){
-        tokeInfo[] memory metaInfo = new tokeInfo[](tokenId);
-        
-        for (uint i = 1; i < tokenId; i++) {
-        metaInfo[i] = metaData[i];
+        tokeInfo[] memory metaInfo = new tokeInfo[](tokenId-1);
+        uint i;
+        for (i = 0; i < tokenId-1; i++) {
+        metaInfo[i] = metaData[i+1];
         }
     return metaInfo;
     }
