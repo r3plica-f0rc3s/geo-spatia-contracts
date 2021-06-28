@@ -17,7 +17,14 @@ contract GeoTokens is ERC721,Ownable {
         string svg;
         uint8 status; //0 = sold, 1 = available
         uint256 price;
+        uint16 layer;
     }
+    
+    mapping(uint16 => bool) layerLocked;
+    
+    event layerLock(uint16 layerNumber,bool layerStatus);
+    event NFTCreation(uint256 tokenID,tokeInfo Info);
+    event NFTSale(address buyer,uint256 tokenId);
     
     constructor() ERC721("GeoTokens","GT"){
         tokenId = 1;
@@ -28,12 +35,22 @@ contract GeoTokens is ERC721,Ownable {
         metaData[tokenID].price = _price;
     }
     
+    function changeLayerLock(uint16 layerNumber,bool status) external onlyOwner{
+        require(layerLocked[layerNumber] != status,"GeoTokens : Locked status doesn't change");
+        layerLocked[layerNumber] = status;
+        emit layerLock(layerNumber,status);
+    }
     
     //Owner can mint a new NFT 
-    function CreateNew(tokeInfo memory MetaData) external onlyOwner{
-        _safeMint(owner(), tokenId);
-        metaData[tokenId] = MetaData;
-        tokenId = tokenId + 1;
+    function CreateNew(tokeInfo[] memory MetaData) external onlyOwner{
+        uint256 length = MetaData.length;
+        uint256 j;
+        for(j=0;j<length;j++){
+            _safeMint(owner(), tokenId);
+            metaData[tokenId] = MetaData[j];
+            tokenId = tokenId + 1;
+        }
+        
     }
     
     //Owner can retrieve ONE stored in contract
@@ -45,9 +62,12 @@ contract GeoTokens is ERC721,Ownable {
     
     //Users can pay prescribed amount and buy token of particular token ID
     function Buy(uint256 tokenID) external payable{
-        require (msg.value >= metaData[tokenID].price, "GeoTokens: Pay equal to or more than set Price");
         require (_exists(tokenID),"GeoTokens: Token doesn't exist");
-        require (metaData[tokenId].status != 0,"GoeTokens: Token is already sold");
+        require (metaData[tokenID].status != 0,"GoeTokens: Token is already sold");
+        require (!layerLocked[metaData[tokenID].layer],"GeoTokens: This layer is locked right now");
+        require (msg.value >= metaData[tokenID].price, "GeoTokens: Pay equal to or more than set Price");
+        
+        
         safeTransferFrom(owner(),msg.sender,tokenID);
         metaData[tokenID].status = 0; //Token status is sold
     }
@@ -67,6 +87,7 @@ contract GeoTokens is ERC721,Ownable {
         }
     return metaInfo;
     }
+    
     
     
 }
