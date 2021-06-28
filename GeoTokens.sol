@@ -62,6 +62,7 @@ contract GeoTokens is ERC721,Ownable {
         uint256 j;
         for(j=0;j<length;j++){
             metaData[tokenId] = MetaData[j];
+            emit NFTCreation(tokenId,metaData[tokenId]);
             tokenId = tokenId + 1;
         }
         
@@ -83,6 +84,7 @@ contract GeoTokens is ERC721,Ownable {
         metaData[tokenID].status = 0;//Token status is sold
         _safeMint(msg.sender, tokenID);
         emit NFTSale(msg.sender,tokenID);
+        
     }
     
     //returns metadata based on token ID
