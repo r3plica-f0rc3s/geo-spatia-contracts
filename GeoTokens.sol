@@ -47,7 +47,7 @@ contract GeoTokens is ERC721,Ownable {
         uint256 j;
         for(j=0;j<length;j++){
             metaData[tokenId] = MetaData[j];
-            emit NFTCreation(uint256 tokenId,MetaData[tokenId]);
+            emit NFTCreation(tokenId,MetaData[tokenId]);
             tokenId = tokenId + 1;
         }
         
@@ -66,7 +66,6 @@ contract GeoTokens is ERC721,Ownable {
         require (metaData[tokenID].status == 1,"GoeTokens: Token is already sold");
         require (!layerLocked[metaData[tokenID].layer],"GeoTokens: This layer is locked right now");
         require (msg.value >= metaData[tokenID].price, "GeoTokens: Pay equal to or more than set Price");
-        
         _safeMint(msg.sender, tokenID);
         metaData[tokenID].status = 0; //Token status is sold
         emit NFTSale(msg.sender,tokenID);
