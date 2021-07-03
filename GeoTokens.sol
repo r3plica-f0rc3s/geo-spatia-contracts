@@ -103,6 +103,19 @@ contract GeoTokens is ERC721,Ownable {
     return metaInfo;
     }
     
+    function getUserOwnedNFT() external view returns(tokenInfo[] memory){
+        tokenInfo[] memory metaInfo = new tokenInfo[](balanceOf(msg.sender));
+        uint i;
+        uint j = 0;
+        for (i = 1; i < tokenId; i++) {
+            if(ownerOf(i) == msg.sender){
+                metaInfo[j] = metaData[i];
+                j += 1;
+            }
+        }
+        return metaInfo;
+    }
+    
     
     
 }
