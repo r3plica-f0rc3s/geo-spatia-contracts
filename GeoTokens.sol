@@ -55,7 +55,6 @@ contract GeoTokens is ERC721,Ownable {
         emit layerLock(layerNumber,status);
     }
     
-    
     //Owner can mint a new NFT 
     function CreateNew(tokenInfo[] memory MetaData) external onlyApprovedOrOwner(msg.sender) {
         uint256 length = MetaData.length;
@@ -104,10 +103,14 @@ contract GeoTokens is ERC721,Ownable {
     }
     
     function getUserOwnedNFT() external view returns(tokenInfo[] memory){
-        tokenInfo[] memory metaInfo = new tokenInfo[](balanceOf(msg.sender));
+        uint256 length = balanceOf(msg.sender);
+        tokenInfo[] memory metaInfo = new tokenInfo[](length);
         uint i;
         uint j = 0;
         for (i = 1; i < tokenId; i++) {
+            if(j==length){
+                break;
+            }
             if(ownerOf(i) == msg.sender){
                 metaInfo[j] = metaData[i];
                 j += 1;
