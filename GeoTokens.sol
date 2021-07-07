@@ -10,11 +10,11 @@ contract GeoTokens is ERC721,Ownable {
     
     uint256 private tokenId;
     mapping (uint256 => tokenInfo) metaData;
+    mapping (uint256 => string) tokenSvg;
     
     struct tokenInfo{
         string name;
         string location;
-        string svg;
         uint8 status; //0 = sold, 1 = available
         uint256 price;
         uint16 layer;
@@ -56,15 +56,20 @@ contract GeoTokens is ERC721,Ownable {
     }
     
     //Owner can mint a new NFT 
-    function CreateNew(tokenInfo[] memory MetaData) external onlyApprovedOrOwner(msg.sender) {
+    function CreateNew(tokenInfo[] memory MetaData,string[] memory svg) external onlyApprovedOrOwner(msg.sender) {
         uint256 length = MetaData.length;
         uint256 j;
         for(j=0;j<length;j++){
             metaData[tokenId] = MetaData[j];
+            tokenSvg[tokenId] = svg[j];
             emit NFTCreation(tokenId,metaData[tokenId]);
             tokenId = tokenId + 1;
         }
-        
+    }
+    
+    //Get token SVG
+    function GetTokenSVG(uint256 tokenID) public view returns(string memory){
+        return tokenSvg[tokenID];
     }
     
     //Owner can retrieve ONE stored in contract
@@ -92,14 +97,36 @@ contract GeoTokens is ERC721,Ownable {
         return metaData[tokenID];
     }
     
+    function getTotalNFTs() external view returns(uint256){
+        return tokenId-1;
+    }
+    
     //Returns metadata of all available NFTs
-    function getAllNFT() public view returns(tokenInfo[] memory){
-        tokenInfo[] memory metaInfo = new tokenInfo[](tokenId-1);
-        uint i;
-        for (i = 0; i < tokenId-1; i++) {
-        metaInfo[i] = metaData[i+1];
+    function getAllNFT(uint256 len,uint256 index) public view returns(tokenInfo[] memory,bool){
+        require(index < tokenId,"GeoTokens: Index needs to be less (or equal to) total NFTs");
+        require(index > 0,"GeoTokens: Index start from 1");
+        require(len > 0,"GeoTokens: length needs to be greater than 0");
+        index -= 1;
+        bool isEnd;
+        uint256 endVal;
+        uint256 length;
+        if(index + len  >= tokenId){
+            endVal = tokenId-1;
+            length = endVal-index;
+            isEnd = true;
         }
-    return metaInfo;
+        else{
+            endVal = index + len;
+            length = len;
+            isEnd = false;
+        }
+        tokenInfo[] memory metaInfo = new tokenInfo[](length);
+        
+        uint i;
+        for (i = 0; i < length; i++) {
+        metaInfo[i] = metaData[index+i];
+        }
+    return (metaInfo,isEnd);
     }
     
     function getUserOwnedNFT() external view returns(tokenInfo[] memory){
