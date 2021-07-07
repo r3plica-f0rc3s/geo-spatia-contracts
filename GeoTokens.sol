@@ -57,6 +57,7 @@ contract GeoTokens is ERC721,Ownable {
     
     //Owner can mint a new NFT 
     function CreateNew(tokenInfo[] memory MetaData,string[] memory svg) external onlyApprovedOrOwner(msg.sender) {
+        require(MetaData.length == svg.length,"GeoTokens: MetaData and Svg lenghts don't match");
         uint256 length = MetaData.length;
         uint256 j;
         for(j=0;j<length;j++){
