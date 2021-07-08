@@ -107,13 +107,12 @@ contract GeoTokens is ERC721,Ownable {
         require(index < tokenId,"GeoTokens: Index needs to be less (or equal to) total NFTs");
         require(index > 0,"GeoTokens: Index start from 1");
         require(len > 0,"GeoTokens: length needs to be greater than 0");
-        index -= 1;
         bool isEnd;
         uint256 endVal;
         uint256 length;
         if(index + len  >= tokenId){
             endVal = tokenId-1;
-            length = endVal-index;
+            length = endVal-index + 1;
             isEnd = true;
         }
         else{
