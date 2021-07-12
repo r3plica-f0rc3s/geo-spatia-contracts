@@ -148,10 +148,14 @@ contract GeoTokens is ERC721,Ownable {
             if(j==length){
                 break;
             }
-            if(ownerOf(i) == msg.sender){
+            if(_exists(i)){
+                if(ownerOf(i) == msg.sender)
+                {
                 metaInfo[j] = metaData[i];
                 j += 1;
+                }
             }
+            
         }
         return metaInfo;
     }
