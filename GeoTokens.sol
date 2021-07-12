@@ -9,6 +9,7 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contr
 contract GeoTokens is ERC721,Ownable {
     
     uint256 private tokenId;
+    uint256 private resaleId;
     mapping (uint256 => tokenInfo) metaData;
     mapping (uint256 => string) tokenSvg;
     
@@ -20,6 +21,14 @@ contract GeoTokens is ERC721,Ownable {
         uint16 layer;
     }
     
+    struct resaleInfo{
+        bool reserved;
+        uint256 resalePrice;
+        uint256 tokenID;
+    } 
+    
+    resaleInfo[] private ResaleTokens;
+    
     mapping(uint16 => bool) layerLocked;
     mapping(address=>bool) approvedUsers;
     event layerLock(uint16 layerNumber,bool layerStatus);
@@ -28,6 +37,7 @@ contract GeoTokens is ERC721,Ownable {
     
     constructor() ERC721("GeoTokens","GT"){
         tokenId = 1;
+        resaleId = 1;
     }
     
     function ApproveUser(address UserAddress) external onlyOwner {
@@ -146,6 +156,31 @@ contract GeoTokens is ERC721,Ownable {
         return metaInfo;
     }
     
+    function enableResale() external {
+        setApprovalForAll(address(this),true);
+    }
     
+    function disableResale() external {
+        setApprovalForAll(address(this),false);
+    }
+    
+    function putTokenForResale(bool isReserved,uint256 price,uint256 TokenID) external {
+        require(ownerOf(TokenID) == msg.sender,"GeoTokens: User is not the owner of NFT");
+        resaleInfo memory newInfo;
+        newInfo.reserved = isReserved;
+        newInfo.resalePrice = price;
+        newInfo.tokenID = TokenID;
+        ResaleTokens.push(newInfo);
+    }
+    
+    function reSale(uint256 resaleID,uint256 TokenID) public payable{
+        require(ResaleTokens[resaleID].tokenID == TokenID, "GeoTokens: Token ID mismatch");
+        require(msg.value == ResaleTokens[resaleID].resalePrice,"Price is not equal to seller defined price");
+        transferFrom(ownerOf(TokenID),msg.sender,TokenID);
+    }
+    
+    function contractBalance() external view returns(uint256){
+        return address(this).balance;
+    }
     
 }
