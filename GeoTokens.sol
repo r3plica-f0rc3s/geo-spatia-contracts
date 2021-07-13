@@ -43,7 +43,7 @@ contract GeoTokens is ERC721,Ownable {
     mapping(address=>uint256) public salesBalance;
     
     event layerLock(uint16 layerNumber,bool layerStatus);
-    event NFTCreation(uint256 tokenID,tokenInfo Info,uint256 saleTime);
+    event NFTCreation(uint256 tokenID,tokenInfo Info,uint256 saleTime,uint256 creationTime);
     event NFTBid(bidInfo newBid,uint256 tokenId);
     
     constructor() ERC721("GeoTokens","GT"){
@@ -92,7 +92,7 @@ contract GeoTokens is ERC721,Ownable {
             metaData[tokenId+j] = MetaData[j];
             tokenSvg[tokenId+j] = svg[j];
             TokenSaleTime[tokenId+j] = block.timestamp + DaysLater[j] * 1 days;
-            emit NFTCreation(tokenId,metaData[tokenId],TokenSaleTime[tokenId]);
+            emit NFTCreation(tokenId,metaData[tokenId],TokenSaleTime[tokenId],block.timestamp);
             tokenId = tokenId + 1;
         }
     }
