@@ -105,7 +105,9 @@ contract GeoTokens is ERC721,Ownable {
     //Owner can retrieve ONE stored in contract
     function retrieve() external {
         require(salesBalance[msg.sender] > 0,"GeoTokens: No Ether to retrieve");
-        payable(msg.sender).transfer(salesBalance[msg.sender]);
+        uint256 balance = salesBalance[msg.sender];
+        salesBalance[msg.sender] = 0;
+        payable(msg.sender).transfer(balance);
     }
     
     
@@ -113,7 +115,7 @@ contract GeoTokens is ERC721,Ownable {
         require (tokenID < tokenId,"GeoTokens: Token doesn't exist");
         require (metaData[tokenID].status == 1,"GoeTokens: Token is already sold");
         require (!layerLocked[metaData[tokenID].layer],"GeoTokens: This layer is locked right now");
-        require ((msg.value >= metaData[tokenID].price) && (msg.value >= AuctionInfo[tokenID].highestBid + 0.1 ether), "GeoTokens: Pay more than highest bidder");
+        require ((msg.value >= metaData[tokenID].price) && (msg.value >= AuctionInfo[tokenID].highestBid + 0.01 ether), "GeoTokens: Pay more than highest bidder");
         require(block.timestamp < TokenSaleTime[tokenID], "GeoTokens: Auction has already expired");
         bidInfo memory newBid;
         if(AuctionInfo[tokenID].bidderAddress != address(0)){
@@ -217,7 +219,25 @@ contract GeoTokens is ERC721,Ownable {
         ResaleTokens.push(newInfo);
     }
     
-    function RetrieveReSale(uint256 resaleID,uint256 TokenID) public payable{
+    function bidResale(uint256 resaleID,uint256 TokenID) external payable{
+        require(ResaleTokens[resaleID].tokenID == TokenID, "GeoTokens: Token ID mismatch");
+        require(block.timestamp < ResaleTokens[resaleID].resaleTime, "GeoTokens: Auction has ended");
+        require(ResaleTokens[resaleID].highestBid < msg.value + 0.01 ether,"GeoTokens: You need to send amount more than previous bid");
+        address Bidder;
+        uint256 bid;
+        if(ResaleTokens[resaleID].bidderAddress != address(0)){
+            Bidder = ResaleTokens[resaleID].bidderAddress;
+            bid = ResaleTokens[resaleID].highestBid;
+            ResaleTokens[resaleID].bidderAddress = address(0);
+            ResaleTokens[resaleID].highestBid = 0;
+            payable(Bidder).transfer(bid);
+        }
+        ResaleTokens[resaleID].bidderAddress = msg.sender;
+        ResaleTokens[resaleID].highestBid = msg.value;
+        
+    }
+    
+    function RetrieveReSale(uint256 resaleID,uint256 TokenID) external{
         require(ResaleTokens[resaleID].tokenID == TokenID, "GeoTokens: Token ID mismatch");
         require(block.timestamp > ResaleTokens[resaleID].resaleTime, "GeoTokens: Auction has not ended yet");
         require(ResaleTokens[TokenID].bidderAddress == msg.sender,"GeoTokens: User is not the highest bidder");
