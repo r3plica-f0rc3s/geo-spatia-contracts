@@ -37,7 +37,7 @@ contract GeoTokens is ERC721,Ownable {
     
     resaleInfo[] public ResaleTokens;
     mapping(uint256=>uint256) public TokenSaleTime;
-    mapping(uint256=>bidInfo) AuctionInfo;
+    mapping(uint256=>bidInfo) public AuctionInfo;
     mapping(uint16 => bool) layerLocked;
     mapping(address=>bool) public approvedUsers;
     mapping(address=>uint256) public salesBalance;
