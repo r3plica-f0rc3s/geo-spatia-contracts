@@ -139,6 +139,7 @@ contract GeoTokens is ERC721,Ownable {
         metaData[tokenID].status = 0;//Token status is sold
         salesBalance[owner()] += AuctionInfo[tokenID].highestBid;
         delete TokenSaleTime[tokenID];
+        delete AuctionInfo[tokenID];
         _safeMint(msg.sender, tokenID);
     }
     
