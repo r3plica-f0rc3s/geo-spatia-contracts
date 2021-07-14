@@ -78,7 +78,7 @@ contract GeoTokens is ERC721,Ownable {
     function changeSaleTime(uint256 tokenID,uint256 newDaysLater) external onlyApprovedOrOwner(msg.sender){
         require(metaData[tokenID].status == 1,"GeoTokens : Can't change auction end date for sold tokens");
         require(tokenID < tokenId,"GeoTokens : NFT doesn't exist");
-        TokenSaleTime[tokenId] = block.timestamp + newDaysLater * 1 days;
+        TokenSaleTime[tokenId] = block.timestamp + newDaysLater * 1 seconds;
     }
     
     //Owner can mint a new NFT and host for auction
@@ -91,7 +91,7 @@ contract GeoTokens is ERC721,Ownable {
         for(j=0;j<length;j++){
             metaData[tokenId+j] = MetaData[j];
             tokenSvg[tokenId+j] = svg[j];
-            TokenSaleTime[tokenId+j] = block.timestamp + DaysLater[j] * 1 days;
+            TokenSaleTime[tokenId+j] = block.timestamp + DaysLater[j] * 1 seconds;
             emit NFTCreation(tokenId,metaData[tokenId],TokenSaleTime[tokenId],block.timestamp);
             tokenId = tokenId + 1;
         }
@@ -216,13 +216,14 @@ contract GeoTokens is ERC721,Ownable {
         resaleInfo memory newInfo;
         newInfo.resalePrice = price;
         newInfo.tokenID = TokenID;
-        newInfo.resaleTime = block.timestamp + daysAfter * 1 days;
+        newInfo.resaleTime = block.timestamp + daysAfter * 1 seconds;
         ResaleTokens.push(newInfo);
     }
     
     function bidResale(uint256 resaleID,uint256 TokenID) external payable{
         require(ResaleTokens[resaleID].tokenID == TokenID, "GeoTokens: Token ID mismatch");
         require(block.timestamp < ResaleTokens[resaleID].resaleTime, "GeoTokens: Auction has ended");
+        require(msg.value > ResaleTokens[resaleID].resalePrice, "GeoTokens: Bid can't be lower than initial price");
         require(ResaleTokens[resaleID].highestBid < msg.value + 0.01 ether,"GeoTokens: You need to send amount more than previous bid");
         address Bidder;
         uint256 bid;
