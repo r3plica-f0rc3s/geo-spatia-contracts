@@ -8,11 +8,7 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contr
 
 contract GeoTokens is ERC721,Ownable {
     
-    uint256 private tokenId;
-    uint256 private resaleId;
-    mapping (uint256 => tokenInfo) metaData;
-    mapping (uint256 => string) tokenSvg;
-    
+    //Structs
     struct tokenInfo{
         string name;
         string location;
@@ -34,23 +30,34 @@ contract GeoTokens is ERC721,Ownable {
         address bidderAddress;
     }
     
-    
-    resaleInfo[] public ResaleTokens;
+    //Primary NFT
+    uint256 private tokenId;
+    mapping (uint256 => tokenInfo) metaData;
+    mapping (uint256 => string) tokenSvg;
     mapping(uint256=>uint256) public TokenSaleTime;
     mapping(uint256=>bidInfo) public AuctionInfo;
-    mapping(uint16 => bool) layerLocked;
+    
+    //Admin
     mapping(address=>bool) public approvedUsers;
+    mapping(uint16 => bool) layerLocked;
     mapping(address=>uint256) public salesBalance;
     
+    //Resale
+    uint256 private resaleId;
+    resaleInfo[] public ResaleTokens;
+    
+    //evets
     event layerLock(uint16 layerNumber,bool layerStatus);
     event NFTCreation(uint256 tokenID,tokenInfo Info,uint256 saleTime,uint256 creationTime);
     event NFTBid(bidInfo newBid,uint256 tokenId);
+    event ResaleBid(resaleInfo latestInfo,uint256 resaleId,uint256 tokenID);
     
     constructor() ERC721("GeoTokens","GT"){
         tokenId = 1;
         resaleId = 1;
     }
     
+    //Admin functions
     function ApproveUser(address UserAddress) external onlyOwner {
         approvedUsers[UserAddress] = true;
     }
@@ -60,6 +67,7 @@ contract GeoTokens is ERC721,Ownable {
         require(UserAddress == owner() || approvedUsers[UserAddress],"GeoTokens : User is not owner or Approved");
         _;
     }
+    
     //Set price of any NFT with token ID
     function SetPrice(uint256 tokenID,uint256 _price) external onlyApprovedOrOwner(msg.sender) {
         require(metaData[tokenID].status == 1,"GeoTokens : Can't change sold NFT's price");
@@ -97,20 +105,15 @@ contract GeoTokens is ERC721,Ownable {
         }
     }
     
+    //Sales
+    
+    
     //Get token SVG
     function GetTokenSVG(uint256 tokenID) public view returns(string memory){
         return tokenSvg[tokenID];
     }
     
-    //Owner can retrieve ONE stored in contract
-    function retrieve() external {
-        require(salesBalance[msg.sender] > 0,"GeoTokens: No Ether to retrieve");
-        uint256 balance = salesBalance[msg.sender];
-        salesBalance[msg.sender] = 0;
-        payable(msg.sender).transfer(balance);
-    }
-    
-    
+    //Make a bid
     function Bid(uint256 tokenID) external payable{
         require (tokenID < tokenId,"GeoTokens: Token doesn't exist");
         require (metaData[tokenID].status == 1,"GoeTokens: Token is already sold");
@@ -132,8 +135,8 @@ contract GeoTokens is ERC721,Ownable {
         
     }
     
-    //Users can retrieve tokens won in the auction
-    function RetrieveNFT(uint256 tokenID) external payable{
+    //Users can retrieve NFTs won in the auction
+    function RetrieveNFT(uint256 tokenID) external{
         require(AuctionInfo[tokenID].bidderAddress == msg.sender,"GeoTokens: User is not auction winner for this token");
         require(metaData[tokenID].status == 1,"GeoTokens: NFT has alread been sold");
         metaData[tokenID].status = 0;//Token status is sold
@@ -142,6 +145,18 @@ contract GeoTokens is ERC721,Ownable {
         delete AuctionInfo[tokenID];
         _safeMint(msg.sender, tokenID);
     }
+    
+    
+    //Users can retrieve ONE stored in contract against their sales balance
+    function retrieve() external {
+        require(salesBalance[msg.sender] > 0,"GeoTokens: No Ether to retrieve");
+        uint256 balance = salesBalance[msg.sender];
+        salesBalance[msg.sender] = 0;
+        payable(msg.sender).transfer(balance);
+    }
+    
+    
+    
     
     //returns metadata based on token ID
     function getMetadata(uint256 tokenID) public view returns(tokenInfo memory){
@@ -201,6 +216,8 @@ contract GeoTokens is ERC721,Ownable {
         return metaInfo;
     }
     
+    //Resale
+    
     //make pure frontend ?
     function enableResale() external {
         setApprovalForAll(address(this),true);
@@ -218,6 +235,7 @@ contract GeoTokens is ERC721,Ownable {
         newInfo.tokenID = TokenID;
         newInfo.resaleTime = block.timestamp + daysAfter * 1 seconds;
         ResaleTokens.push(newInfo);
+        resaleId += 1;
     }
     
     function bidResale(uint256 resaleID,uint256 TokenID) external payable{
@@ -236,6 +254,7 @@ contract GeoTokens is ERC721,Ownable {
         }
         ResaleTokens[resaleID].bidderAddress = msg.sender;
         ResaleTokens[resaleID].highestBid = msg.value;
+        emit ResaleBid(ResaleTokens[resaleID],resaleID,TokenID);
         
     }
     
