@@ -51,6 +51,8 @@ contract GeoTokens is ERC721,Ownable {
     event NFTCreation(uint256 tokenID,tokenInfo Info,uint256 saleTime,uint256 creationTime);
     event NFTBid(bidInfo newBid,uint256 tokenId);
     event ResaleBid(resaleInfo latestInfo,uint256 resaleId,uint256 tokenID);
+    event SaleRetrieve(address UserAddress, uint256 tokenID);
+    event ResaleRetrieve(address previousOwner,address newOwner, uint256 resaleID,uint256 tokenID);
     
     constructor() ERC721("GeoTokens","GT"){
         tokenId = 1;
@@ -136,14 +138,24 @@ contract GeoTokens is ERC721,Ownable {
     }
     
     //Users can retrieve NFTs won in the auction
-    function RetrieveNFT(uint256 tokenID) external{
-        require(AuctionInfo[tokenID].bidderAddress == msg.sender,"GeoTokens: User is not auction winner for this token");
-        require(metaData[tokenID].status == 1,"GeoTokens: NFT has alread been sold");
-        metaData[tokenID].status = 0;//Token status is sold
-        salesBalance[owner()] += AuctionInfo[tokenID].highestBid;
-        delete TokenSaleTime[tokenID];
-        delete AuctionInfo[tokenID];
-        _safeMint(msg.sender, tokenID);
+    function RetrieveNFT(uint256[] memory tokenID) external{
+        uint256 length = tokenID.length;
+        uint256 i;
+        for(i=0;i<length;i++)
+        {
+            require(AuctionInfo[tokenID[i]].bidderAddress == msg.sender,"GeoTokens: User is not auction winner for this token");
+            require(metaData[tokenID[i]].status == 1,"GeoTokens: NFT has alread been sold");
+        }
+        
+        for(i=0;i<length;i++){
+            metaData[tokenID[i]].status = 0;//Token status is sold
+            salesBalance[owner()] += AuctionInfo[tokenID[i]].highestBid;
+            delete TokenSaleTime[tokenID[i]];
+            delete AuctionInfo[tokenID[i]];
+            _safeMint(msg.sender, tokenID[i]);
+            emit SaleRetrieve(msg.sender,tokenID[i]);
+        }
+        
     }
     
     
@@ -258,13 +270,23 @@ contract GeoTokens is ERC721,Ownable {
         
     }
     
-    function RetrieveReSale(uint256 resaleID,uint256 TokenID) external{
-        require(ResaleTokens[resaleID].tokenID == TokenID, "GeoTokens: Token ID mismatch");
-        require(block.timestamp > ResaleTokens[resaleID].resaleTime, "GeoTokens: Auction has not ended yet");
-        require(ResaleTokens[TokenID].bidderAddress == msg.sender,"GeoTokens: User is not the highest bidder");
-        salesBalance[ownerOf(TokenID)] += ResaleTokens[resaleID].highestBid;
-        safeTransferFrom(ownerOf(TokenID),msg.sender,TokenID);
-        delete ResaleTokens[resaleID];
+    function RetrieveReSale(uint256[] memory resaleID,uint256[] memory TokenID) external{
+        require(resaleID.length == TokenID.length,"GeoTokens: Parameter length mismatch");
+        uint256 length = TokenID.length;
+        uint256 i;
+        for(i=0;i<length;i++){
+            require(ResaleTokens[resaleID[i]].tokenID == TokenID[i], "GeoTokens: Token ID mismatch");
+            require(block.timestamp > ResaleTokens[resaleID[i]].resaleTime, "GeoTokens: Auction has not ended yet");
+            require(ResaleTokens[resaleID[i]].bidderAddress == msg.sender,"GeoTokens: User is not the highest bidder");
+        }
+        for(i=0;i<length;i++){
+            salesBalance[ownerOf(TokenID[i])] += ResaleTokens[resaleID[i]].highestBid;
+            address previousOwner = ownerOf(TokenID[i]);
+            safeTransferFrom(previousOwner,msg.sender,TokenID[i]);
+            delete ResaleTokens[resaleID[i]];
+            emit ResaleRetrieve(previousOwner,msg.sender,resaleID[i],TokenID[i]);
+        }
+        
     }
     
 }
