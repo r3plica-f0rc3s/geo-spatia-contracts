@@ -50,6 +50,7 @@ contract GeoTokens is ERC721,Ownable {
     event layerLock(uint16 layerNumber,bool layerStatus);
     event NFTCreation(uint256 tokenID,tokenInfo Info,uint256 saleTime,uint256 creationTime);
     event NFTBid(bidInfo newBid,uint256 tokenId);
+    event ResaleCreation(uint256 tokenID,uint256 resaleID,resaleInfo Info,uint256 creationTime);
     event ResaleBid(resaleInfo latestInfo,uint256 resaleId,uint256 tokenID);
     event SaleRetrieve(address UserAddress, uint256 tokenID);
     event ResaleRetrieve(address previousOwner,address newOwner, uint256 resaleID,uint256 tokenID);
@@ -247,7 +248,9 @@ contract GeoTokens is ERC721,Ownable {
         newInfo.tokenID = TokenID;
         newInfo.resaleTime = block.timestamp + daysAfter * 1 seconds;
         ResaleTokens.push(newInfo);
+        emit ResaleCreation(TokenID,resaleId,ResaleTokens[resaleId],block.timestamp);
         resaleId += 1;
+        
     }
     
     function bidResale(uint256 resaleID,uint256 TokenID) external payable{
