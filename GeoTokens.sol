@@ -146,7 +146,7 @@ contract GeoTokens is ERC721,Ownable {
         {
             require(AuctionInfo[tokenID[i]].bidderAddress == msg.sender,"GeoTokens: User is not auction winner for this token");
             require(metaData[tokenID[i]].status == 1,"GeoTokens: NFT has alread been sold");
-            require(TokenSaleTime[tokenID[i] < block.timestamp,"GeoTokens: Auction has not ended yet"]);
+            require(TokenSaleTime[tokenID[i]] < block.timestamp,"GeoTokens: Auction has not ended yet");
         }
         
         for(i=0;i<length;i++){
