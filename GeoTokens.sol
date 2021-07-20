@@ -146,6 +146,7 @@ contract GeoTokens is ERC721,Ownable {
         {
             require(AuctionInfo[tokenID[i]].bidderAddress == msg.sender,"GeoTokens: User is not auction winner for this token");
             require(metaData[tokenID[i]].status == 1,"GeoTokens: NFT has alread been sold");
+            require(TokenSaleTime[tokenID[i] < block.timestamp,"GeoTokens: Auction has not ended yet"]);
         }
         
         for(i=0;i<length;i++){
@@ -173,7 +174,7 @@ contract GeoTokens is ERC721,Ownable {
     
     //returns metadata based on token ID
     function getMetadata(uint256 tokenID) public view returns(tokenInfo memory){
-        require(_exists(tokenID),"GeoTokens: metaData call for Nonexistent token");
+        require(tokenID < tokenId,"GeoTokens: metaData call for Nonexistent token");
         return metaData[tokenID];
     }
     
@@ -248,7 +249,7 @@ contract GeoTokens is ERC721,Ownable {
         newInfo.tokenID = TokenID;
         newInfo.resaleTime = block.timestamp + daysAfter * 1 seconds;
         ResaleTokens.push(newInfo);
-        emit ResaleCreation(TokenID,resaleId,ResaleTokens[resaleId],block.timestamp);
+        emit ResaleCreation(TokenID,resaleId,newInfo,block.timestamp);
         resaleId += 1;
         
     }
