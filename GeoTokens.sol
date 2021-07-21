@@ -231,21 +231,12 @@ contract GeoTokens is ERC721,Ownable {
     }
     
     //Resale
-    
-    //make pure frontend ?
-    function enableResale() external {
-        setApprovalForAll(address(this),true);
-    }
-    
-    //Make pure frontend??
-    function disableResale() external {
-        setApprovalForAll(address(this),false);
-    }
-    
     function putTokenForResale(uint256 price,uint256 TokenID,uint256 daysAfter) external {
         require(ownerOf(TokenID) == msg.sender,"GeoTokens: User is not the owner of this NFT");
         require(metaData[TokenID].status != 2,"GeoTokens: Token is already on re sale");
-        require(isApprovedForAll(msg.sender,address(this)),"GeoTokens: User has not enabled resale");
+        if(!isApprovedForAll(msg.sender,address(this))){
+            setApprovalForAll(address(this),true);
+        }
         resaleInfo memory newInfo;
         newInfo.resalePrice = price;
         newInfo.tokenID = TokenID;
