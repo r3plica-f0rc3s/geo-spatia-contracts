@@ -12,7 +12,7 @@ contract GeoTokens is ERC721,Ownable {
     struct tokenInfo{
         string name;
         string location;
-        uint8 status; //0 = sold, 1 = available
+        uint8 status; //0 = sold, 1 = available, 2 = on resale
         uint256 price;
         uint16 layer;
     }
@@ -244,11 +244,14 @@ contract GeoTokens is ERC721,Ownable {
     
     function putTokenForResale(uint256 price,uint256 TokenID,uint256 daysAfter) external {
         require(ownerOf(TokenID) == msg.sender,"GeoTokens: User is not the owner of this NFT");
+        require(metaData[TokenID].status != 2,"GeoTokens: Token is already on re sale");
+        require(isApprovedForAll(msg.sender,address(this)),"GeoTokens: User has not enabled resale");
         resaleInfo memory newInfo;
         newInfo.resalePrice = price;
         newInfo.tokenID = TokenID;
         newInfo.resaleTime = block.timestamp + daysAfter * 1 seconds;
         ResaleTokens.push(newInfo);
+        metaData[TokenID].status = 2;
         emit ResaleCreation(TokenID,resaleId,newInfo,block.timestamp);
         resaleId += 1;
         
@@ -288,6 +291,7 @@ contract GeoTokens is ERC721,Ownable {
             address previousOwner = ownerOf(TokenID[i]);
             safeTransferFrom(previousOwner,msg.sender,TokenID[i]);
             delete ResaleTokens[resaleID[i]];
+            metaData[TokenID[i]].status = 1;
             emit ResaleRetrieve(previousOwner,msg.sender,resaleID[i],TokenID[i]);
         }
         
