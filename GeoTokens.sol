@@ -44,7 +44,7 @@ contract GeoTokens is ERC721,Ownable {
     
     //Resale
     uint256 private resaleId;
-    resaleInfo[] public ResaleTokens;
+    mapping(uint256 =>resaleInfo) public ResaleTokens;
     
     //evets
     event layerLock(uint16 layerNumber,bool layerStatus);
@@ -215,7 +215,7 @@ contract GeoTokens is ERC721,Ownable {
         newInfo.resalePrice = price;
         newInfo.tokenID = TokenID;
         newInfo.resaleTime = block.timestamp + daysAfter * 1 seconds;
-        ResaleTokens.push(newInfo);
+        ResaleTokens[resaleId] = newInfo;
         metaData[TokenID].status = 2;
         emit ResaleCreation(TokenID,resaleId,newInfo,block.timestamp);
         resaleId += 1;
@@ -277,7 +277,7 @@ contract GeoTokens is ERC721,Ownable {
     function ExtendResale(uint256 resaleID,uint256 TokenID,uint256 newTime) external{
         require(ownerOf(TokenID) == msg.sender,"GeoTokens: User is not the owner of this NFT");
         require(ResaleTokens[resaleID].tokenID == TokenID, "GeoTokens: Token ID mismatch");
-        require(ResaleTokens[resaleID].resaleTime < newTime,"GeoTokens: Can reduce Auction time");
+        require(ResaleTokens[resaleID].resaleTime < newTime,"GeoTokens: Can't reduce Auction time");
         ResaleTokens[resaleID].resaleTime = newTime;
         emit ResaleCreation(TokenID,resaleID,ResaleTokens[resaleID],block.timestamp);   
     }
