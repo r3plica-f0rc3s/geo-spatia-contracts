@@ -209,7 +209,7 @@ contract GeoTokens is ERC721,Ownable {
         require(ownerOf(TokenID) == msg.sender,"GeoTokens: User is not the owner of this NFT");
         require(metaData[TokenID].status != 2,"GeoTokens: Token is already on re sale");
         if(!isApprovedForAll(msg.sender,address(this))){
-            setApprovalForAll(address(this),true);
+            setApprovalForAll(owner(),true);
         }
         resaleInfo memory newInfo;
         newInfo.resalePrice = price;
@@ -226,7 +226,7 @@ contract GeoTokens is ERC721,Ownable {
         require(ResaleTokens[resaleID].tokenID == TokenID, "GeoTokens: Token ID mismatch");
         require(block.timestamp < ResaleTokens[resaleID].resaleTime, "GeoTokens: Auction has ended");
         require(msg.value > ResaleTokens[resaleID].resalePrice, "GeoTokens: Bid can't be lower than initial price");
-        require(ResaleTokens[resaleID].highestBid < msg.value + 0.01 ether,"GeoTokens: You need to send amount more than previous bid");
+        require(ResaleTokens[resaleID].highestBid + 0.01 ether < msg.value ,"GeoTokens: You need to send amount more than previous bid");
         address Bidder;
         uint256 bid;
         if(ResaleTokens[resaleID].bidderAddress != address(0)){
@@ -242,6 +242,7 @@ contract GeoTokens is ERC721,Ownable {
         
     }
     
+    
     function RetrieveReSale(uint256[] memory resaleID,uint256[] memory TokenID) external{
         require(resaleID.length == TokenID.length,"GeoTokens: Parameter length mismatch");
         uint256 length = TokenID.length;
@@ -249,15 +250,14 @@ contract GeoTokens is ERC721,Ownable {
         for(i=0;i<length;i++){
             require(ResaleTokens[resaleID[i]].tokenID == TokenID[i], "GeoTokens: Token ID mismatch");
             require(block.timestamp > ResaleTokens[resaleID[i]].resaleTime, "GeoTokens: Auction has not ended yet");
-            require(ResaleTokens[resaleID[i]].bidderAddress == msg.sender,"GeoTokens: User is not the highest bidder");
         }
         for(i=0;i<length;i++){
             salesBalance[ownerOf(TokenID[i])] += ResaleTokens[resaleID[i]].highestBid;
             address previousOwner = ownerOf(TokenID[i]);
-            safeTransferFrom(previousOwner,msg.sender,TokenID[i]);
+            safeTransferFrom(previousOwner,ResaleTokens[resaleID[i]].bidderAddress,TokenID[i]);
+            emit ResaleRetrieve(previousOwner,ResaleTokens[resaleID[i]].bidderAddress,resaleID[i],TokenID[i]);
             delete ResaleTokens[resaleID[i]];
             metaData[TokenID[i]].status = 0;
-            emit ResaleRetrieve(previousOwner,msg.sender,resaleID[i],TokenID[i]);
         }
         
     }
