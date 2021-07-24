@@ -265,6 +265,7 @@ contract GeoTokens is ERC721,Ownable {
     function StopResale(uint256 resaleID,uint256 TokenID) external{
         require(ownerOf(TokenID) == msg.sender,"GeoTokens: User is not the owner of this NFT");
         require(ResaleTokens[resaleID].tokenID == TokenID, "GeoTokens: Token ID mismatch");
+        require(metaData[TokenID].status == 3,"GeoTokens: NFT is not for resale");
         if(ResaleTokens[resaleID].bidderAddress != address(0)){
             payable(ResaleTokens[resaleID].bidderAddress).transfer(ResaleTokens[resaleID].highestBid);
         }
