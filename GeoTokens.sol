@@ -54,6 +54,7 @@ contract GeoTokens is ERC721,Ownable {
     event ResaleBid(resaleInfo latestInfo,uint256 resaleId,uint256 tokenID);
     event SaleRetrieve(address UserAddress, uint256 tokenID);
     event ResaleRetrieve(address previousOwner,address newOwner, uint256 resaleID,uint256 tokenID);
+    event ResaleRemoved(uint256 resaleID,uint256 tokenID);
     
     constructor() ERC721("GeoTokens","GT"){
         tokenId = 1;
@@ -182,33 +183,6 @@ contract GeoTokens is ERC721,Ownable {
         return tokenId-1;
     }
     
-    //Returns metadata of all available NFTs
-    function getAllNFT(uint256 len,uint256 index) public view returns(tokenInfo[] memory,bool){
-        require(index < tokenId,"GeoTokens: Index needs to be less (or equal to) total NFTs");
-        require(index > 0,"GeoTokens: Index start from 1");
-        require(len > 0,"GeoTokens: length needs to be greater than 0");
-        bool isEnd;
-        uint256 endVal;
-        uint256 length;
-        if(index + len  >= tokenId){
-            endVal = tokenId-1;
-            length = endVal-index + 1;
-            isEnd = true;
-        }
-        else{
-            endVal = index + len;
-            length = len;
-            isEnd = false;
-        }
-        tokenInfo[] memory metaInfo = new tokenInfo[](length);
-        
-        uint i;
-        for (i = 0; i < length; i++) {
-        metaInfo[i] = metaData[index+i];
-        }
-    return (metaInfo,isEnd);
-    }
-    
     function getUserOwnedNFT() external view returns(tokenInfo[] memory){
         uint256 length = balanceOf(msg.sender);
         tokenInfo[] memory metaInfo = new tokenInfo[](length);
@@ -282,10 +256,28 @@ contract GeoTokens is ERC721,Ownable {
             address previousOwner = ownerOf(TokenID[i]);
             safeTransferFrom(previousOwner,msg.sender,TokenID[i]);
             delete ResaleTokens[resaleID[i]];
-            metaData[TokenID[i]].status = 1;
+            metaData[TokenID[i]].status = 0;
             emit ResaleRetrieve(previousOwner,msg.sender,resaleID[i],TokenID[i]);
         }
         
     }
     
+    function StopResale(uint256 resaleID,uint256 TokenID) external{
+        require(ownerOf(TokenID) == msg.sender,"GeoTokens: User is not the owner of this NFT");
+        require(ResaleTokens[resaleID].tokenID == TokenID, "GeoTokens: Token ID mismatch");
+        if(ResaleTokens[resaleID].bidderAddress != address(0)){
+            payable(ResaleTokens[resaleID].bidderAddress).transfer(ResaleTokens[resaleID].highestBid);
+        }
+        metaData[TokenID].status = 0;
+        delete ResaleTokens[resaleID];
+        emit ResaleRemoved(resaleID,TokenID);
+    }
+    
+    function ExtendResale(uint256 resaleID,uint256 TokenID,uint256 newTime) external{
+        require(ownerOf(TokenID) == msg.sender,"GeoTokens: User is not the owner of this NFT");
+        require(ResaleTokens[resaleID].tokenID == TokenID, "GeoTokens: Token ID mismatch");
+        require(ResaleTokens[resaleID].resaleTime < newTime,"GeoTokens: Can reduce Auction time");
+        ResaleTokens[resaleID].resaleTime = newTime;
+        emit ResaleCreation(TokenID,resaleID,ResaleTokens[resaleID],block.timestamp);   
+    }
 }
