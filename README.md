@@ -1,4 +1,4 @@
-# geo-spatia-contracts
+# Contract Readme
 ## Features
 
 #### Struct Based Storage 
