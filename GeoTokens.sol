@@ -80,14 +80,14 @@ contract GeoTokens is ERC721,Ownable {
     }
     
     //Change locked status of layer
-    function changeLayerLock(uint16 layerNumber,bool status) external onlyApprovedOrOwner(msg.sender){
+    function ChangeLayerLock(uint16 layerNumber,bool status) external onlyApprovedOrOwner(msg.sender){
         require(layerLocked[layerNumber] != status,"GeoTokens : Locked status doesn't change");
         layerLocked[layerNumber] = status;
         emit layerLock(layerNumber,status);
     }
     
     //Change end date of auction
-    function changeSaleTime(uint256 tokenID,uint256 newDaysLater) external onlyApprovedOrOwner(msg.sender){
+    function ChangeSaleTime(uint256 tokenID,uint256 newDaysLater) external onlyApprovedOrOwner(msg.sender){
         require(metaData[tokenID].status == 1,"GeoTokens : Can't change auction end date for sold tokens");
         require(tokenID < tokenId,"GeoTokens : NFT doesn't exist");
         TokenSaleTime[tokenId] = block.timestamp + newDaysLater * 1 seconds;
@@ -163,7 +163,7 @@ contract GeoTokens is ERC721,Ownable {
     
     
     //Users can retrieve ONE stored in contract against their sales balance
-    function retrieve() external {
+    function Retrieve() external {
         require(salesBalance[msg.sender] > 0,"GeoTokens: No Ether to retrieve");
         uint256 balance = salesBalance[msg.sender];
         salesBalance[msg.sender] = 0;
@@ -174,16 +174,16 @@ contract GeoTokens is ERC721,Ownable {
     
     
     //returns metadata based on token ID
-    function getMetadata(uint256 tokenID) public view returns(tokenInfo memory){
+    function GetMetadata(uint256 tokenID) public view returns(tokenInfo memory){
         require(tokenID < tokenId,"GeoTokens: metaData call for Nonexistent token");
         return metaData[tokenID];
     }
     
-    function getTotalNFTs() external view returns(uint256){
+    function GetTotalNFTs() external view returns(uint256){
         return tokenId-1;
     }
     
-    function getUserOwnedNFT() external view returns(tokenInfo[] memory){
+    function GetUserOwnedNFT() external view returns(tokenInfo[] memory){
         uint256 length = balanceOf(msg.sender);
         tokenInfo[] memory metaInfo = new tokenInfo[](length);
         uint i;
@@ -205,7 +205,7 @@ contract GeoTokens is ERC721,Ownable {
     }
     
     //Resale
-    function putTokenForResale(uint256 price,uint256 TokenID,uint256 daysAfter) external {
+    function PutTokenForResale(uint256 price,uint256 TokenID,uint256 daysAfter) external {
         require(ownerOf(TokenID) == msg.sender,"GeoTokens: User is not the owner of this NFT");
         require(metaData[TokenID].status != 2,"GeoTokens: Token is already on re sale");
         if(!isApprovedForAll(msg.sender,address(this))){
@@ -222,7 +222,7 @@ contract GeoTokens is ERC721,Ownable {
         
     }
     
-    function bidResale(uint256 resaleID,uint256 TokenID) external payable{
+    function BidResale(uint256 resaleID,uint256 TokenID) external payable{
         require(ResaleTokens[resaleID].tokenID == TokenID, "GeoTokens: Token ID mismatch");
         require(block.timestamp < ResaleTokens[resaleID].resaleTime, "GeoTokens: Auction has ended");
         require(msg.value > ResaleTokens[resaleID].resalePrice, "GeoTokens: Bid can't be lower than initial price");
